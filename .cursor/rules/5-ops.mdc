@@ -1,13 +1,37 @@
 ---
-description: 按 README 启动；缺数据库配置即失败；/health 免认证
+description: 部署运维规范：编排文件入库、一条命令启动、免认证健康检查、单行 JSON 日志、版本标签
 globs: "{docker-compose.yml,**/Dockerfile,**/Dockerfile.*}"
 alwaysApply: false
 ---
 
 # 部署
 
-本机只按 `README.md` 启动：复制 `.env.example` 为 `.env`，执行 `docker compose up --build`，然后访问 `http://localhost:8000/health`。
+## 编排文件入库
 
-`DATABASE_URL` 缺失或为空时，应用在接受请求前退出。`GET /health` 不要求登录，并写明数据库是否连通。
+应用和伴随进程各自有 `Dockerfile`。仓库根目录有 `docker-compose.yml`，其中包含数据库、应用和伴随进程。这些文件随代码提交。不把只存在于本机的编排文件当作启动方式。
 
-判据：按 README 填写后，`/health` 返回 HTTP 200；去掉 `DATABASE_URL` 再启动，进程退出且不监听 8000。
+判据：新克隆的仓库里能看到上述文件，且 Compose 文件中的三个服务都在。
+
+## 一条命令启动
+
+填好 `.env` 之后，只按 `README.md` 执行 `docker compose up --build`。这一条命令拉起全部服务。
+
+判据：除填写 `.env` 外，不需要另一条安装或启动命令，`http://localhost:8000/health` 即可访问。
+
+## 健康检查
+
+`GET /health` 不要求登录，并写明应用与数据库是否连通。数据库连通时返回 HTTP 200。
+
+判据：不带 `Authorization` 请求 `/health`，得到 HTTP 200，响应中能看出数据库连通。
+
+## 日志
+
+每个已完成的 HTTP 请求向标准输出写一行。这一行是单个 JSON 对象，含 `request_id`，且与响应头 `X-Request-Id` 相同。
+
+判据：请求一次 `/health`，新增的日志只有一行，能被解析为 JSON，其中的 `request_id` 等于响应头。
+
+## 版本标签
+
+一次可运行的发布在 Git 上打标签，形如 `v0.0.1`，指向按 README 启动成功的那次提交。
+
+判据：该标签存在，检出后仓库中仍有 `Dockerfile` 与 `docker-compose.yml`，并仍能按 README 启动。

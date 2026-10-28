@@ -1,13 +1,39 @@
 ---
-description: 测试来自 spec 场景，pytest 失败就不算完成
-globs: "**/test_*.py"
+description: 测试规范：用例对应场景、三类归组、数据隔离、一键运行
+globs: tests/**/*.py,frontend/**/*.test.tsx
 alwaysApply: false
 ---
 
 # 测试
 
-测试只覆盖当前变更 `spec.md` 里的 Scenario。每条 Scenario 对应一个测试，并标明它是正常路径、失败路径还是边界。
+Python 用例和测试辅助文件在 `tests/`。前端组件测试在 `frontend/`，文件名以 `.test.tsx` 结尾。
 
-门禁命令是 `pytest`。退出码不是 0，这次变更就不能算完成。
+## 用例来源
 
-判据：本次每个 Scenario 都能指出测试函数名；故意改坏一个断言后，`pytest` 失败。
+当前变更 `spec.md` 里的每个 Scenario 至少对应一个测试。测试文件中写明 Scenario 名称，使场景清单和用例能双向对上。没有来源的测试不新增。
+
+判据：Scenario 清单与 `tests/` 下 `test_` 开头的用例，以及 `frontend/` 里的 `.test.tsx`，逐一比对。`tests/companion_loader.py` 这类辅助文件不单独对应 Scenario。
+
+## 三类组织
+
+用例放在三个目录中，缺一即未完成：
+
+- `tests/normal/`：正常路径
+- `tests/failure/`：失败路径
+- `tests/boundary/`：边界
+
+失败路径的条数不少于该 spec 列出的失败 Scenario。边界值取该输入允许范围的两端，不取范围中间的任意值。
+
+判据：三个目录都存在，且失败用例数量不少于 spec 中的失败 Scenario。
+
+## 数据隔离
+
+测试使用单独的数据库，不使用应用运行时的库。每条用例在运行前和运行后清理自己写入的数据，不依赖执行顺序，也不依赖上一条留下的记录。
+
+判据：打乱用例顺序再执行一遍，通过和失败的条目与原顺序一致。
+
+## 一键运行
+
+Python 测试的命令、环境变量、退出码和报告位置以 `README.md` 的「测试」一节为准。前端组件测试在 `frontend/` 里执行 `npm test`。两处退出码都不是 0，变更就不能算完成。
+
+判据：只按 README 执行一次，能得到该节写明的报告。
