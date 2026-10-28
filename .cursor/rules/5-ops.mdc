@@ -1,0 +1,13 @@
+---
+description: 按 README 启动；缺数据库配置即失败；/health 免认证
+globs: "{docker-compose.yml,**/Dockerfile,**/Dockerfile.*}"
+alwaysApply: false
+---
+
+# 部署
+
+本机只按 `README.md` 启动：复制 `.env.example` 为 `.env`，执行 `docker compose up --build`，然后访问 `http://localhost:8000/health`。
+
+`DATABASE_URL` 缺失或为空时，应用在接受请求前退出。`GET /health` 不要求登录，并写明数据库是否连通。
+
+判据：按 README 填写后，`/health` 返回 HTTP 200；去掉 `DATABASE_URL` 再启动，进程退出且不监听 8000。

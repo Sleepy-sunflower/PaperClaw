@@ -1,0 +1,36 @@
+schema: spec-driven
+
+# Project context (optional)
+# This is shown to AI when creating artifacts.
+context: |
+  规划文档语言：OpenSpec 变更产物（proposal、specs、design、tasks）的正文用中文撰写。
+  日常用词译成中文，例如：用户、登录、上传、文献、文献库、客户端、密码、用户名、
+  阅读助手、伴随进程、会话、列表、下载、密钥、数据库、环境变量、知识库、片段、出处。
+  不要翻译 schema 标题、规范关键字、API 路径、环境变量名、代码标识符和专有词。
+  标题示例：Why、What Changes、Capabilities、Impact、Purpose、ADDED Requirements、
+  Requirement、Scenario、Context、Goals / Non-Goals、Decisions、Risks / Trade-offs、
+  Migration Plan、Open Questions，以及 tasks.md 的分组标题；Requirement / Scenario 名称保持英文。
+  关键字示例：SHALL、MUST、MUST NOT、WHEN、THEN、HTTP 方法与路径（如 GET /health、
+  /api/v1/missing）、环境变量名（如 DATABASE_URL）、表名与字段名（如 request_id）、
+  代码枚举值（如 service 为 companion）。
+  专有词示例：文献引路、FastAPI、PostgreSQL、pgvector、React、Vite、Docker Compose、
+  OpenSpec、capability 路径（runtime-skeleton 等）。
+
+# Per-artifact rules (optional)
+rules:
+  proposal:
+    - 正文用中文，日常用词译成中文（用户、登录、上传、文献库、客户端、阅读助手等）
+    - 保留 Why / What Changes / Capabilities / Impact 等 schema 标题不翻译
+    - 不翻译专有词、SHALL/MUST、capability 路径、API 路径与环境变量名
+  specs:
+    - 正文用中文，日常用词译成中文；保留 Purpose、ADDED Requirements、Requirement、Scenario、WHEN、THEN
+    - Requirement 名称与 Scenario 名称保持英文标题，不翻译
+    - SHALL / MUST / MUST NOT 保留为规范关键字
+    - API 路径、字段名、代码枚举值保持原文
+  design:
+    - 正文用中文，日常用词译成中文；保留 Context、Goals / Non-Goals、Decisions 等 schema 标题
+    - 代码标识符、路径、环境变量、技术栈名称保持原文
+  tasks:
+    - 任务描述用中文，日常用词译成中文；保留分组标题与 `- [ ] X.Y` 编号格式
+    - 命令、路径、环境变量、表字段等保持原文
+    - 每条任务仍须在同一 checkbox 中写明验证方式

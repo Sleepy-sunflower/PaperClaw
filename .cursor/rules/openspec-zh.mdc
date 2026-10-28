@@ -1,0 +1,26 @@
+---
+description: OpenSpec 规划文档用中文写正文；日常用词翻译，标题、路径和专有词保持原文
+globs: openspec/**/*.md
+alwaysApply: true
+---
+
+# OpenSpec 文档语言
+
+撰写或修改 `openspec/` 下的规划文档时，正文用中文。用户、登录、上传、文献、文献库、客户端、密码、阅读助手、伴随进程、密钥、数据库等日常用词译成中文。
+
+不要翻译：
+
+- **标题**：schema 章节名（`Why`、`Purpose`、`Requirement`、`Scenario`、`Context`、`Decisions` 等）、Requirement/Scenario 英文名、`tasks.md` 分组标题
+- **关键字**：`SHALL` / `MUST` / `MUST NOT` / `WHEN` / `THEN`、HTTP 方法与路径、环境变量、表字段、代码枚举值
+- **专有词**：文献引路、FastAPI、PostgreSQL、pgvector、React、Vite、Docker Compose、OpenSpec、capability 路径
+
+```markdown
+# ❌ BAD
+## 目的
+系统应当在 health 接口报告 database 已连接。
+
+# ✅ GOOD
+## Purpose
+系统 SHALL 通过 `GET /health` 报告数据库是否可达。
+数据库不可达时，响应 MUST 返回 HTTP 503。
+```

@@ -1,0 +1,13 @@
+---
+description: 测试来自 spec 场景，pytest 失败就不算完成
+globs: "**/test_*.py"
+alwaysApply: false
+---
+
+# 测试
+
+测试只覆盖当前变更 `spec.md` 里的 Scenario。每条 Scenario 对应一个测试，并标明它是正常路径、失败路径还是边界。
+
+门禁命令是 `pytest`。退出码不是 0，这次变更就不能算完成。
+
+判据：本次每个 Scenario 都能指出测试函数名；故意改坏一个断言后，`pytest` 失败。
