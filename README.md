@@ -24,15 +24,13 @@ macOS 或 Linux 把复制环境文件的那一行换成 `cp .env.example .env`�
 
 ## 测试
 
-Python 测试不需要额外的环境变量，也不会连接 Compose 里正在使用的数据库。在仓库根目录执行：
+在仓库根目录执行。其中一条用例会执行 `docker compose up --build -d`，并检查 http://localhost:8000/health 里数据库为连通。其余需要数据库的用例另起一个测试库，不使用 Compose 里的库。不需要再设置环境变量。需要本机 Docker 已启动，并且 `.env` 已按上一节填好。
 
 ```powershell
 pytest --junitxml=test-reports/junit.xml
 ```
 
 退出码 `0` 表示通过。报告写在 `test-reports/junit.xml`。
-
-已按上面的步骤启动后，可用 `PAPERCLAW_LIVE=1` 再跑一次，以检查本机的 `GET /health`。不设置时，对应用例会跳过。
 
 前端组件测试在 `frontend/` 目录执行 `npm test`。退出码 `0` 表示通过。
 

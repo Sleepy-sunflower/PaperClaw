@@ -2,18 +2,37 @@
 
 from __future__ import annotations
 
-import os
+import json
+import subprocess
+import time
+import urllib.error
+import urllib.request
+from pathlib import Path
 
-import pytest
 
-
-@pytest.mark.skipif(
-    os.environ.get("PAPERCLAW_LIVE") != "1",
-    reason="需要已按 README 启动，并设置 PAPERCLAW_LIVE=1",
-)
-def test_running_stack_health_is_ok() -> None:
-    """按 README 启动后，GET /health 返回 HTTP 200。"""
-    import urllib.request
-
-    with urllib.request.urlopen("http://localhost:8000/health") as response:
-        assert response.status == 200
+def test_readme_startup_health_reports_database_up() -> None:
+    """执行 README 的启动命令后，GET /health 返回 HTTP 200，且数据库为 up。"""
+    root = Path(__file__).resolve().parents[2]
+    started = subprocess.run(
+        ["docker", "compose", "up", "--build", "-d"],
+        cwd=root,
+        capture_output=True,
+        check=False,
+    )
+    assert started.returncode == 0, started.stderr.decode("utf-8", errors="replace")
+    body: dict[str, object] = {}
+    status = 0
+    last_error = ""
+    for _ in range(60):
+        try:
+            with urllib.request.urlopen("http://localhost:8000/health") as response:
+                status = response.status
+                body = json.loads(response.read().decode())
+            if status == 200 and body.get("checks", {}).get("database") == "up":
+                break
+        except (urllib.error.URLError, OSError, TimeoutError) as error:
+            last_error = str(error)
+        time.sleep(2)
+    assert status == 200, last_error
+    assert body["status"] == "ok"
+    assert body["checks"]["database"] == "up"
