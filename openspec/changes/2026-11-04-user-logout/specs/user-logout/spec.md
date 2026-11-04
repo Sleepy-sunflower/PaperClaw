@@ -20,7 +20,7 @@
 
 ### Requirement: Logout control is on the shell
 
-登录后的文献库和阅读助手 MUST 显示「登出」。点击后 MUST 先调用登出接口，再清除浏览器里保存的令牌，并进入 `/login`。`/login` MUST NOT 显示「登出」。登出完成后再打开 `/library` 或 `/reader`，MUST 进入 `/login`，并且不显示大标题和菜单。
+登录后的文献库和阅读助手 MUST 显示「登出」。点击后 MUST 先调用 `DELETE /api/v1/sessions/current`。响应为 HTTP 200 或 HTTP 401 时，MUST 清除浏览器里保存的令牌，并进入 `/login`。请求没有得到响应，或响应不是这两个状态时，MUST 留在原页，显示「登出没有成功。网络可能中断。留在此页再试。」，并且 MUST NOT 清除令牌。`/login` MUST NOT 显示「登出」。登出完成后再打开 `/library` 或 `/reader`，MUST 进入 `/login`，并且不显示大标题和菜单。
 
 #### Scenario: Click logout from the library
 
@@ -31,3 +31,8 @@
 
 - **WHEN** 访问者打开 `/login`
 - **THEN** 页面没有「登出」
+
+#### Scenario: Logout stays when the request fails
+
+- **WHEN** 已登录用户在 `/library` 点击「登出」，而登出请求没有得到响应，或响应不是 HTTP 200 也不是 HTTP 401
+- **THEN** 地址仍是 `/library`，页面显示「登出没有成功。网络可能中断。留在此页再试。」，`paperclaw.token` 仍在

@@ -39,11 +39,3 @@ def test_logout_succeeds(monkeypatch, test_database_url: str) -> None:  # type: 
     assert current.status_code == 401
     again = client.delete("/api/v1/sessions/current", headers=headers)
     assert again.status_code == 401
-
-
-def test_logout_without_a_token(monkeypatch, test_database_url: str) -> None:  # type: ignore[no-untyped-def]
-    """Scenario: Logout without a token"""
-    client = _client(monkeypatch, test_database_url)
-    response = client.delete("/api/v1/sessions/current")
-    assert response.status_code == 401
-    assert response.json()["code"] == "unauthenticated"

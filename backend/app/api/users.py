@@ -6,11 +6,9 @@ import re
 
 from fastapi import APIRouter, Request
 from fastapi.responses import JSONResponse
-from psycopg.errors import UniqueViolation
 
 from app.api.responses import json_error, json_ok
-from app.db.users import insert_user
-from app.services.passwords import hash_password
+from app.services.accounts import register_account
 
 router = APIRouter()
 _USERNAME = re.compile(r"[a-z0-9-]{1,32}")
@@ -42,8 +40,6 @@ async def register_user(request: Request) -> JSONResponse:
         return _invalid(request_id)
     if not isinstance(password, str) or not 1 <= len(password) <= 72:
         return _invalid(request_id)
-    try:
-        insert_user(request.app.state.database_url, username, hash_password(password))
-    except UniqueViolation:
+    if register_account(request.app.state.database_url, username, password) == "exists":
         return json_error("already_exists", "用户名已被占用", request_id, 409)
     return json_ok({"username": username}, request_id, 201)

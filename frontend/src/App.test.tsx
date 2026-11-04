@@ -142,6 +142,54 @@ describe("user login", () => {
     expect(localStorage.getItem("paperclaw.token")).toBeNull();
   });
 
+  test("Scenario: Logout stays when the request fails", async () => {
+    const user = userEvent.setup();
+    const currentUser = new Response(
+      JSON.stringify({
+        code: "ok",
+        message: "",
+        data: { username: "reader-one" },
+        request_id: "r",
+      }),
+      { status: 200 },
+    );
+
+    localStorage.setItem("paperclaw.token", "token-1");
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async (_url: string, init?: RequestInit) => {
+        if (init?.method === "DELETE") {
+          throw new TypeError("network");
+        }
+        return currentUser.clone();
+      }),
+    );
+    const offline = renderAt("/library");
+    expect(await screen.findByText("reader-one")).toBeTruthy();
+    await user.click(screen.getByRole("button", { name: "登出" }));
+    expect(await screen.findByText("登出没有成功。网络可能中断。留在此页再试。")).toBeTruthy();
+    expect(screen.getByTestId("location").textContent).toBe("/library");
+    expect(localStorage.getItem("paperclaw.token")).toBe("token-1");
+    offline.unmount();
+
+    localStorage.setItem("paperclaw.token", "token-1");
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async (_url: string, init?: RequestInit) => {
+        if (init?.method === "DELETE") {
+          return new Response(JSON.stringify({ code: "unavailable" }), { status: 500 });
+        }
+        return currentUser.clone();
+      }),
+    );
+    renderAt("/library");
+    expect(await screen.findByText("reader-one")).toBeTruthy();
+    await user.click(screen.getByRole("button", { name: "登出" }));
+    expect(await screen.findByText("登出没有成功。网络可能中断。留在此页再试。")).toBeTruthy();
+    expect(screen.getByTestId("location").textContent).toBe("/library");
+    expect(localStorage.getItem("paperclaw.token")).toBe("token-1");
+  });
+
   test("Scenario: Login page has no logout", () => {
     renderAt("/login");
     expect(screen.queryByRole("button", { name: "登出" })).toBeNull();

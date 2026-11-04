@@ -6,18 +6,7 @@ from fastapi import APIRouter, Request
 from fastapi.responses import JSONResponse
 
 from app.api.responses import json_error, json_ok
-from app.db.users import (
-    delete_session_by_token_hash,
-    find_user,
-    find_username_by_token_hash,
-    insert_session,
-)
-from app.services.passwords import (
-    burn_password_check,
-    hash_token,
-    new_token,
-    password_matches,
-)
+from app.services.accounts import close_session, open_session, username_for_token
 
 router = APIRouter()
 
@@ -25,6 +14,15 @@ router = APIRouter()
 def _unauthenticated(request_id: str) -> JSONResponse:
     """用户名或密码不正确，或令牌无效。"""
     return json_error("unauthenticated", "未登录", request_id, 401)
+
+
+def _bearer_token(request: Request) -> str | None:
+    """取出 Bearer 令牌。没有或为空时返回 None。"""
+    header = request.headers.get("authorization", "")
+    prefix = "Bearer "
+    if not header.startswith(prefix) or header == prefix:
+        return None
+    return header[len(prefix) :]
 
 
 @router.post("/api/v1/sessions", response_model=None)
@@ -41,14 +39,9 @@ async def login(request: Request) -> JSONResponse:
     password = body.get("password")
     if not isinstance(username, str) or not isinstance(password, str):
         return _unauthenticated(request_id)
-    user = find_user(request.app.state.database_url, username)
-    if user is None:
-        burn_password_check(password)
+    token = open_session(request.app.state.database_url, username, password)
+    if token is None:
         return _unauthenticated(request_id)
-    if not password_matches(password, user["password_hash"]):
-        return _unauthenticated(request_id)
-    token = new_token()
-    insert_session(request.app.state.database_url, username, hash_token(token))
     return json_ok({"token": token, "username": username}, request_id)
 
 
@@ -56,14 +49,10 @@ async def login(request: Request) -> JSONResponse:
 def current_session(request: Request) -> JSONResponse:
     """用 Bearer 令牌读取当前用户名。"""
     request_id = request.state.request_id
-    header = request.headers.get("authorization", "")
-    prefix = "Bearer "
-    if not header.startswith(prefix) or header == prefix:
+    token = _bearer_token(request)
+    if token is None:
         return _unauthenticated(request_id)
-    username = find_username_by_token_hash(
-        request.app.state.database_url,
-        hash_token(header[len(prefix) :]),
-    )
+    username = username_for_token(request.app.state.database_url, token)
     if username is None:
         return _unauthenticated(request_id)
     return json_ok({"username": username}, request_id)
@@ -73,14 +62,9 @@ def current_session(request: Request) -> JSONResponse:
 def logout(request: Request) -> JSONResponse:
     """删除当前令牌对应的会话。"""
     request_id = request.state.request_id
-    header = request.headers.get("authorization", "")
-    prefix = "Bearer "
-    if not header.startswith(prefix) or header == prefix:
+    token = _bearer_token(request)
+    if token is None:
         return _unauthenticated(request_id)
-    deleted = delete_session_by_token_hash(
-        request.app.state.database_url,
-        hash_token(header[len(prefix) :]),
-    )
-    if not deleted:
+    if not close_session(request.app.state.database_url, token):
         return _unauthenticated(request_id)
     return json_ok(None, request_id)
