@@ -40,6 +40,7 @@ alwaysApply: false
 | 认证 | `unauthenticated` | 401 |
 | 授权 | `permission_denied` | 403 |
 | 业务 | `not_found` | 404 |
+| 业务 | `already_exists` | 409 |
 | 依赖不可达 | `unavailable` | 503 |
 
 判据：实际返回的 `code` 和 HTTP 状态能在表中找到。表外的错误码即缺陷。

@@ -14,6 +14,8 @@ from starlette.middleware.base import BaseHTTPMiddleware, RequestResponseEndpoin
 from starlette.responses import Response
 
 from app.api.health import router as health_router
+from app.api.sessions import router as sessions_router
+from app.api.users import router as users_router
 from app.config import load_settings
 
 
@@ -49,6 +51,8 @@ def create_app() -> FastAPI:
     app.state.database_url = settings.database_url
     app.add_middleware(RequestLogMiddleware)
     app.include_router(health_router)
+    app.include_router(users_router)
+    app.include_router(sessions_router)
 
     @app.api_route(
         "/api/{full_path:path}",
