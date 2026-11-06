@@ -34,12 +34,17 @@
 
 ### Requirement: Library prints the task and lists only ready papers
 
-系统 SHALL 接受读取任务状态的请求，且 MUST 带当前用户的 Bearer 令牌。文献库页面 MUST 以纯文本显示「待处理」「处理中」「已可检索」「失败」，以及处理过程中的「抽字」「切块」「嵌入」「写入」。状态成为「已可检索」后，页面 MUST 以文本显示该文件名，并且不再显示「还没有文献。」文件名中的引号和 HTML 标签 MUST 按字面显示。`GET /api/v1/papers` MUST 只返回该用户状态已是「已可检索」的文献标识和文件名，MUST NOT 含片段原文、向量或其他用户的文件名。还没有已可检索的文献时，`data` MUST 为空数组。
+系统 SHALL 接受读取任务状态的请求，且 MUST 带当前用户的 Bearer 令牌。文献库页面 MUST 以纯文本显示任务的当前状态，即「待处理」「处理中」「已可检索」「失败」中的一个，以及处理过程中的「抽字」「切块」「嵌入」「写入」。状态按页面轮询观察到的顺序追加。轮询之间被跳过的中间状态 MUST NOT 让页面停在旧状态、留白或一直加载。状态成为「已可检索」后，页面 MUST 以文本显示该文件名，并且不再显示「还没有文献。」文件名中的引号和 HTML 标签 MUST 按字面显示。`GET /api/v1/papers` MUST 只返回该用户状态已是「已可检索」的文献标识和文件名，MUST NOT 含片段原文、向量或其他用户的文件名。还没有已可检索的文献时，`data` MUST 为空数组。
 
 #### Scenario: Library shows the task log
 
 - **WHEN** 已登录用户在 `/library` 上传一份 PDF，并且处理进程做完
-- **THEN** 页面文本里出现「待处理」「处理中」「已可检索」「抽字」「切块」「嵌入」「写入」
+- **THEN** 页面文本里出现「已可检索」「抽字」「切块」「嵌入」「写入」，页面没有留白，也没有一直加载
+
+#### Scenario: Skipped intermediate status does not stall the page
+
+- **WHEN** 处理进程在页面两次轮询之间就从「待处理」走到「已可检索」，页面的第一次轮询只看到「已可检索」
+- **THEN** 页面文本里出现「已可检索」和「抽字」「切块」「嵌入」「写入」，不停在「待处理」，不留白，文献列表里出现该文件名
 
 #### Scenario: Library shows the uploaded filename
 

@@ -53,7 +53,7 @@
 
 ### Requirement: Login page and post-login library
 
-`/login` SHALL 同时提供注册和登录，并写出用户名和密码的规则。这一页 MUST NOT 显示大标题「文献引路」，也 MUST NOT 显示文献库或阅读助手菜单。提交过程中 MUST 显示加载中。失败时 MUST 显示错误，并写明发生了什么、可能的原因、下一步。登录成功后 MUST 进入 `/library`，此时页面 MUST 显示大标题和两个菜单。已登录且没有文献时，文献库 MUST 显示空状态和当前用户名。未登录打开 `/`、`/library` 或 `/reader` 时 MUST 进入 `/login`，并且仍然不显示大标题和菜单。`GET /health`、`POST /api/v1/users` 和 `POST /api/v1/sessions` 以外的业务接口，没有有效令牌时 MUST 拒绝。
+`/login` SHALL 同时提供注册和登录，并写出用户名和密码的规则。这一页 MUST NOT 显示大标题「文献引路」，也 MUST NOT 显示文献库或阅读助手菜单。提交过程中 MUST 显示加载中。失败时 MUST 显示错误，并写明发生了什么、可能的原因、下一步。注册或登录的请求抛出异常时 MUST 显示错误状态，MUST NOT 一直显示加载中。登录成功后 MUST 进入 `/library`，此时页面 MUST 显示大标题和两个菜单。已登录且没有文献时，文献库 MUST 显示空状态和当前用户名。文献库首次读取 `GET /api/v1/sessions/current` MUST 有超时；该请求抛出异常或超时 MUST 显示错误状态，MUST NOT 一直显示加载中。未登录打开 `/`、`/library` 或 `/reader` 时 MUST 进入 `/login`，并且仍然不显示大标题和菜单。`GET /health`、`POST /api/v1/users` 和 `POST /api/v1/sessions` 以外的业务接口，没有有效令牌时 MUST 拒绝。
 
 #### Scenario: Successful login opens the library
 
@@ -64,6 +64,16 @@
 
 - **WHEN** 访问者在 `/login` 提交错误密码
 - **THEN** 页面仍在 `/login`，显示错误，并说明可以重新输入
+
+#### Scenario: Login page shows an error when the request fails
+
+- **WHEN** 访问者在 `/login` 提交注册或登录，而请求因为网络中断抛出异常
+- **THEN** 页面仍在 `/login`，显示对应的错误句子并写明下一步，不再显示「正在注册。」或「正在登录。」
+
+#### Scenario: Library shows an error when the session read times out
+
+- **WHEN** 已登录的访问者打开 `/library`，而读取 `GET /api/v1/sessions/current` 的请求超时或抛出异常
+- **THEN** 页面显示错误状态并写明下一步，不再显示「正在读取你的文献。」
 
 #### Scenario: Unauthenticated pages go to login
 

@@ -7,6 +7,7 @@ type Status = "idle" | "loading" | "error";
 export function LoginPage(): JSX.Element {
   const navigate = useNavigate();
   const [loginStatus, setLoginStatus] = useState<Status>("idle");
+  const [loginError, setLoginError] = useState("");
   const [registerStatus, setRegisterStatus] = useState<Status>("idle");
   const [registerError, setRegisterError] = useState("");
 
@@ -14,16 +15,25 @@ export function LoginPage(): JSX.Element {
     event.preventDefault();
     const form = new FormData(event.currentTarget);
     setLoginStatus("loading");
-    const response = await fetch("/api/v1/sessions", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        username: form.get("username"),
-        password: form.get("password"),
-      }),
-    });
+    setLoginError("");
+    let response: Response;
+    try {
+      response = await fetch("/api/v1/sessions", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          username: form.get("username"),
+          password: form.get("password"),
+        }),
+      });
+    } catch {
+      setLoginStatus("error");
+      setLoginError("登录没有成功。网络可能中断。留在此页再试。");
+      return;
+    }
     if (!response.ok) {
       setLoginStatus("error");
+      setLoginError("登录没有成功。用户名或密码不正确。按上面的规则重新输入后再试。");
       return;
     }
     const body = (await response.json()) as { data: { token: string } };
@@ -36,14 +46,21 @@ export function LoginPage(): JSX.Element {
     const form = new FormData(event.currentTarget);
     setRegisterStatus("loading");
     setRegisterError("");
-    const response = await fetch("/api/v1/users", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        username: form.get("username"),
-        password: form.get("password"),
-      }),
-    });
+    let response: Response;
+    try {
+      response = await fetch("/api/v1/users", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          username: form.get("username"),
+          password: form.get("password"),
+        }),
+      });
+    } catch {
+      setRegisterStatus("error");
+      setRegisterError("注册没有成功。网络可能中断。留在此页再试。");
+      return;
+    }
     if (!response.ok) {
       const body = (await response.json()) as { code?: string };
       setRegisterStatus("error");
@@ -85,9 +102,7 @@ export function LoginPage(): JSX.Element {
         </label>
         <button type="submit">登录</button>
         {loginStatus === "loading" ? <p>正在登录。</p> : null}
-        {loginStatus === "error" ? (
-          <p>登录没有成功。用户名或密码不正确。按上面的规则重新输入后再试。</p>
-        ) : null}
+        {loginStatus === "error" ? <p>{loginError}</p> : null}
       </form>
     </>
   );

@@ -96,6 +96,49 @@ describe("user login", () => {
     expect(screen.getByTestId("location").textContent).toBe("/login");
   });
 
+  test("Scenario: Login page shows an error when the request fails", async () => {
+    const user = userEvent.setup();
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async (url: string) => {
+        if (String(url).endsWith("/api/v1/sessions")) {
+          throw new TypeError("network");
+        }
+        return new Response(JSON.stringify({ code: "ok" }), { status: 201 });
+      }),
+    );
+    renderAt("/login");
+    const form = screen.getByRole("form", { name: "登录" });
+    await user.type(form.querySelector('input[name="username"]') as HTMLInputElement, "reader-one");
+    await user.type(form.querySelector('input[name="password"]') as HTMLInputElement, "password1");
+    await user.click(screen.getByRole("button", { name: "登录" }));
+    expect(await screen.findByText("登录没有成功。网络可能中断。留在此页再试。")).toBeTruthy();
+    expect(screen.queryByText("正在登录。")).toBeNull();
+    expect(screen.getByTestId("location").textContent).toBe("/login");
+    expect(localStorage.getItem("paperclaw.token")).toBeNull();
+  });
+
+  test("Scenario: Login page shows an error when the register request fails", async () => {
+    const user = userEvent.setup();
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async (url: string) => {
+        if (String(url).endsWith("/api/v1/users")) {
+          throw new TypeError("network");
+        }
+        return new Response(JSON.stringify({ code: "ok" }), { status: 200 });
+      }),
+    );
+    renderAt("/login");
+    const form = screen.getByRole("form", { name: "注册" });
+    await user.type(form.querySelector('input[name="username"]') as HTMLInputElement, "reader-one");
+    await user.type(form.querySelector('input[name="password"]') as HTMLInputElement, "password1");
+    await user.click(screen.getByRole("button", { name: "注册" }));
+    expect(await screen.findByText("注册没有成功。网络可能中断。留在此页再试。")).toBeTruthy();
+    expect(screen.queryByText("正在注册。")).toBeNull();
+    expect(screen.getByTestId("location").textContent).toBe("/login");
+  });
+
   test("Scenario: Unauthenticated pages go to login", () => {
     const library = renderAt("/library");
     expect(library.getByTestId("location").textContent).toBe("/login");

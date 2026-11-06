@@ -85,6 +85,32 @@ def test_another_user_cannot_read_the_paper(
     assert invalid_paper.json()["code"] == "invalid_argument"
 
 
+def test_list_hides_other_users_papers(
+    client: TestClient,
+    monkeypatch,  # type: ignore[no-untyped-def]
+    test_database_url: str,
+) -> None:
+    """Scenario: List hides other users' papers"""
+    monkeypatch.setattr(
+        "app.services.papers.send_embedding",
+        lambda base_url, api_key, model, text: [0.5] * 2048,
+    )
+    text = sample_text()
+    token_a = register_and_login(client, "reader-one")
+    upload = upload_pdf(client, token_a, make_pdf(text), filename="secret-a.pdf")
+    assert upload.status_code == 202
+    assert process_next_task(test_database_url) is True
+
+    token_b = register_and_login(client, "reader-two")
+    listing = client.get(
+        "/api/v1/papers", headers={"Authorization": f"Bearer {token_b}"}
+    )
+    assert listing.status_code == 200
+    assert listing.json()["data"] == []
+    assert "secret-a.pdf" not in listing.text
+    assert text[:20] not in listing.text
+
+
 def test_missing_token_is_rejected(client: TestClient) -> None:
     """Scenario: Missing token is rejected"""
     response = client.get("/api/v1/papers")

@@ -7,6 +7,8 @@ type TaskData = { status: string; log: string[] };
 
 const POLL_MS = 400;
 
+export const SESSION_TIMEOUT_MS = 10000;
+
 export function LibraryPage(): JSX.Element {
   const token = readToken();
   const navigate = useNavigate();
@@ -23,8 +25,11 @@ export function LibraryPage(): JSX.Element {
       return;
     }
     let cancelled = false;
+    const controller = new AbortController();
+    const timer = window.setTimeout(() => controller.abort(), SESSION_TIMEOUT_MS);
     fetch("/api/v1/sessions/current", {
       headers: { Authorization: `Bearer ${token}` },
+      signal: controller.signal,
     })
       .then(async (response) => {
         if (response.status === 401) {
@@ -47,9 +52,14 @@ export function LibraryPage(): JSX.Element {
         if (!cancelled) {
           setFailed(true);
         }
+      })
+      .finally(() => {
+        window.clearTimeout(timer);
       });
     return () => {
       cancelled = true;
+      controller.abort();
+      window.clearTimeout(timer);
     };
   }, [token, navigate]);
 
