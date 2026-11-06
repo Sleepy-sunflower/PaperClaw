@@ -1,0 +1,9 @@
+# 端到端验证专用：把宿主机端口挪开，避免和操作者日常运行的栈抢 8000 和 8001。
+# 用法见 tests/e2e_real_upload.py 与 tests/e2e_persistence_and_inspect.py。
+services:
+  api:
+    ports: !override
+      - "18000:8000"
+  companion:
+    ports: !override
+      - "18001:8001"

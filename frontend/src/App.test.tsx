@@ -79,7 +79,6 @@ describe("user login", () => {
     expect(screen.getByRole("heading", { name: "文献引路" })).toBeTruthy();
     expect(screen.getByRole("link", { name: "文献库" })).toBeTruthy();
     expect(screen.getByRole("link", { name: "阅读助手" })).toBeTruthy();
-    expect(document.querySelector('input[type="file"]')).toBeNull();
   });
 
   test("Scenario: Login failure stays on the page", async () => {

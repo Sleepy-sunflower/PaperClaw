@@ -53,12 +53,12 @@
 
 ### Requirement: Login page and post-login library
 
-`/login` SHALL 同时提供注册和登录，并写出用户名和密码的规则。这一页 MUST NOT 显示大标题「文献引路」，也 MUST NOT 显示文献库或阅读助手菜单。提交过程中 MUST 显示加载中。失败时 MUST 显示错误，并写明发生了什么、可能的原因、下一步。登录成功后 MUST 进入 `/library`，此时页面 MUST 显示大标题和两个菜单。已登录且没有文献时，文献库 MUST 显示空状态和当前用户名，MUST NOT 提供上传控件。未登录打开 `/`、`/library` 或 `/reader` 时 MUST 进入 `/login`，并且仍然不显示大标题和菜单。`GET /health`、`POST /api/v1/users` 和 `POST /api/v1/sessions` 以外的业务接口，没有有效令牌时 MUST 拒绝。
+`/login` SHALL 同时提供注册和登录，并写出用户名和密码的规则。这一页 MUST NOT 显示大标题「文献引路」，也 MUST NOT 显示文献库或阅读助手菜单。提交过程中 MUST 显示加载中。失败时 MUST 显示错误，并写明发生了什么、可能的原因、下一步。登录成功后 MUST 进入 `/library`，此时页面 MUST 显示大标题和两个菜单。已登录且没有文献时，文献库 MUST 显示空状态和当前用户名。未登录打开 `/`、`/library` 或 `/reader` 时 MUST 进入 `/login`，并且仍然不显示大标题和菜单。`GET /health`、`POST /api/v1/users` 和 `POST /api/v1/sessions` 以外的业务接口，没有有效令牌时 MUST 拒绝。
 
 #### Scenario: Successful login opens the library
 
 - **WHEN** 访问者在 `/login` 用正确的用户名和密码登录
-- **THEN** 浏览器地址变为 `/library`，页面显示该用户名和空状态，没有上传控件
+- **THEN** 浏览器地址变为 `/library`，页面显示该用户名和空状态
 
 #### Scenario: Login failure stays on the page
 

@@ -11,7 +11,7 @@ alwaysApply: true
 
 业务接口默认不可访问。要开放的接口必须写进授权清单，并写明谁可以调用、满足什么条件。清单里没有的接口，访问失败。
 
-`GET /health`、`POST /api/v1/users` 和 `POST /api/v1/sessions` 不需要令牌。列出文献、检索、提问、读取单份文献、`GET /api/v1/sessions/current` 和 `DELETE /api/v1/sessions/current` 都要带当前用户的 Bearer 令牌。没有令牌或令牌无效时拒绝，响应里不出现文献内容。
+`GET /health`、`POST /api/v1/users` 和 `POST /api/v1/sessions` 不需要令牌。上传文献（`POST /api/v1/papers`）、读取任务（`GET /api/v1/paper-tasks/{task_id}`）、列出文献、检索、提问、读取单份文献、`GET /api/v1/sessions/current` 和 `DELETE /api/v1/sessions/current` 都要带当前用户的 Bearer 令牌。没有令牌或令牌无效时拒绝，响应里不出现文献内容。
 
 判据：新建一个尚未登记的接口并访问，请求失败。不带 `Authorization` 调用文献列表，请求被拒绝，响应里没有文献标题或正文。
 

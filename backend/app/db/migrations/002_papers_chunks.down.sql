@@ -1,0 +1,3 @@
+DROP TABLE IF EXISTS ingest_tasks;
+DROP TABLE IF EXISTS chunks;
+DROP TABLE IF EXISTS papers;

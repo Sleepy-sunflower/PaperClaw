@@ -73,6 +73,22 @@ def find_username_by_token_hash(database_url: str, token_hash: str) -> str | Non
     return str(row[0])
 
 
+def find_user_id_by_token_hash(database_url: str, token_hash: str) -> str | None:
+    """按令牌哈希取出用户标识。没有时返回 None。"""
+    with psycopg.connect(database_url) as connection:
+        row = connection.execute(
+            """
+            SELECT sessions.user_id
+            FROM sessions
+            WHERE sessions.token_hash = %s
+            """,
+            (token_hash,),
+        ).fetchone()
+    if row is None:
+        return None
+    return str(row[0])
+
+
 def delete_session_by_token_hash(database_url: str, token_hash: str) -> bool:
     """按令牌哈希删除会话。删到一行时返回 True。"""
     with psycopg.connect(database_url) as connection:

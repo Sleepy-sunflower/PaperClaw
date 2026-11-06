@@ -2,6 +2,7 @@
 .env.*
 !.env.example
 test-reports/
+tmp/
 .venv/
 __pycache__/
 node_modules/

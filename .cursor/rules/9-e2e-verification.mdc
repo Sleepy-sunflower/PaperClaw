@@ -1,0 +1,31 @@
+---
+description: 端到端验证规范：脚本与桩放 tests/，产物放 tmp/，不动本机 .env
+globs: "tests/**,tmp/**"
+alwaysApply: false
+---
+
+# 端到端验证
+
+自动化 pytest 之外，需要真实栈验证（真 HTTP、真处理进程、真数据库）时按本规则组织。
+
+## 脚本与桩入库
+
+端到端驱动脚本和桩服务放在 `tests/`，随代码提交，使别人克隆后能直接跑。文件名不以 `test_` 开头，避免被 pytest 收集；它们不对应 spec 的 Scenario，属于测试辅助文件。桩只监听本机，返回符合规格的数据（例如嵌入桩返回 2048 维向量）。桩的密钥是写死的假值。
+
+独立项目名不隔离宿主机端口，所以测试栈另用 `tests/e2e-ports.yml` 覆盖文件（`ports: !override`）把端口挪到 18000 和 18001，驱动脚本用 `-f docker-compose.yml -f tests/e2e-ports.yml` 起栈。这样操作者日常运行的栈不用停。
+
+判据：新克隆的仓库里，只装好依赖并启动 Docker，执行 `python tests/e2e_real_upload.py` 能走通上传到「已可检索」；日常栈正在运行时执行 `python tests/e2e_persistence_and_inspect.py` 也能全部通过。
+
+面向操作者的工具不属于测试辅助文件：例如只读查看数据库的 `tools/db_inspect.py` 放在 `tools/`，并写进 `README.md`。
+
+## 产物放 tmp/
+
+验证过程生成的文件——PDF 样本、桩日志、报告——写进仓库根目录的 `tmp/`。`tmp/` 在 `.gitignore` 里，不入库，也不散落在仓库根目录或系统临时目录。生成物要能让操作者打开查看。
+
+判据：跑完端到端验证后，`git status` 干净；`tmp/` 里能看到生成的 PDF 和日志。
+
+## 不碰本机 .env，用独立栈
+
+端到端验证不读取、不修改本机 `.env`。Compose 变量用 `tests/e2e-compose.env`（只含测试假值，可入库），并以独立项目名（`-p paperclaw-e2e`）起停，避免和操作者日常运行的栈冲突。结束后 `docker compose -p paperclaw-e2e down -v` 拆栈，停掉桩进程。真实密钥永远不写进仓库、日志和验证输出。
+
+判据：验证前后本机 `.env` 内容不变；日常栈的容器不受影响；仓库和 `tmp/` 的日志里找不到真实密钥。

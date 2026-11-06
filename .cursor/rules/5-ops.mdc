@@ -1,6 +1,6 @@
 ---
-description: 部署运维规范：编排文件入库、一条命令启动、免认证健康检查、单行 JSON 日志、版本标签
-globs: "{docker-compose.yml,**/Dockerfile,**/Dockerfile.*}"
+description: 部署运维规范：编排文件入库、一条命令启动、数据保存与只读查看、免认证健康检查、单行 JSON 日志、版本标签
+globs: "{docker-compose.yml,**/Dockerfile,**/Dockerfile.*,tools/**}"
 alwaysApply: false
 ---
 
@@ -8,15 +8,27 @@ alwaysApply: false
 
 ## 编排文件入库
 
-应用和伴随进程各自有 `Dockerfile`。仓库根目录有 `docker-compose.yml`，其中包含数据库、应用和伴随进程。这些文件随代码提交。不把只存在于本机的编排文件当作启动方式。
+应用和伴随进程各自有 `Dockerfile`。仓库根目录有 `docker-compose.yml`，其中包含数据库、一次性迁移、应用、处理进程和伴随进程。这些文件随代码提交。不把只存在于本机的编排文件当作启动方式。
 
-判据：新克隆的仓库里能看到上述文件，且 Compose 文件中的三个服务都在。
+判据：新克隆的仓库里能看到上述文件，且 Compose 文件中的五个服务都在。
 
 ## 一条命令启动
 
 填好 `.env` 之后，只按 `README.md` 执行 `docker compose up --build`。这一条命令拉起全部服务。
 
 判据：除填写 `.env` 外，不需要另一条安装或启动命令，`http://localhost:8000/health` 即可访问。
+
+## 数据保存
+
+数据库数据存在 Docker 卷 `pgdata` 里。`docker compose down` 不删数据，只有 `docker compose down -v` 才删。数据文件不进仓库工作区，数据库端口不对宿主机发布。迁移由一次性 `migrate` 服务先跑完，应用与处理进程等它成功退出后再启动，避免空库上并发建表。
+
+判据：注册一个用户后 `down` 再 `up -d`，用同一组用户名和密码登录仍返回 HTTP 200；`git status` 里没有数据文件；`docker compose ps` 里 `migrate` 是 `Exited (0)`。
+
+## 查看数据
+
+`python tools/db_inspect.py` 只读地列出用户、会话、文献、入库任务和片段正文摘要。它不显示 `password_hash`、`token_hash`、PDF 字节和向量数值，不读取也不修改本机 `.env`，不给数据库发布宿主机端口。
+
+判据：栈运行时执行该命令退出码为 0，`tmp/db-inspect.txt` 里能看到用户名和片段正文；连跑两次输出一致；栈停掉时退出码非 0 并给出中文提示。
 
 ## 健康检查
 

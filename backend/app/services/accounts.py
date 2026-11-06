@@ -9,6 +9,7 @@ from psycopg.errors import UniqueViolation
 from app.db.users import (
     delete_session_by_token_hash,
     find_user,
+    find_user_id_by_token_hash,
     find_username_by_token_hash,
     insert_session,
     insert_user,
@@ -49,6 +50,11 @@ def open_session(database_url: str, username: str, password: str) -> str | None:
 def username_for_token(database_url: str, token: str) -> str | None:
     """用令牌读取当前用户名。无效时返回 None。"""
     return find_username_by_token_hash(database_url, hash_token(token))
+
+
+def user_id_for_token(database_url: str, token: str) -> str | None:
+    """用令牌读取当前用户标识。无效时返回 None。"""
+    return find_user_id_by_token_hash(database_url, hash_token(token))
 
 
 def close_session(database_url: str, token: str) -> bool:
